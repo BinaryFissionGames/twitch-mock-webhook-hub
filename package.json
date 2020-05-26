@@ -4,8 +4,10 @@
   "description": "Quick and dirty mock oauth twitch webhook server for testing applications",
   "main": "dist/index.js",
   "scripts": {
+    "prepublishOnly": "npm run clean && npm run build",
+    "clean": "rm -rf ./dist || rd /s /q .\\dist || exit 0",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "build": "npx prisma generate && tsc",
     "start": "node dist/index.js",
     "postinstall": "npx prisma generate"
   },
