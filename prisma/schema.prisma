@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../dist/generated/prisma/client"
+}
+
+datasource twitch_mock_webhook_hub_db {
+  provider = "sqlite"
+  url      = "file:./twitch_mock_webhook_hub_db.db"
+}
+
+model SubscriberSubscription {
+  id            Int         @default(autoincrement()) @id
+  subscriberId  Int         @unique
+  broadcasterId String
+  userId        String?
+  gifterId      String?
+  gifterName    String?
+  subscriber    Subscribers @relation(fields: [subscriberId], references: [id])
+}
+
+model ChannelBanChangedEventSubscription {
+  broadcasterId String
+  id            Int         @default(autoincrement()) @id
+  subscriberId  Int         @unique
+  userId        String?
+  subscriber    Subscribers @relation(fields: [subscriberId], references: [id])
+}
+
+model ExtensionTransactionCreatedSubscription {
+  extensionId  String
+  id           Int         @default(autoincrement()) @id
+  subscriberId Int         @unique
+  subscriber   Subscribers @relation(fields: [subscriberId], references: [id])
+}
+
+model ModeratorChangedSubscription {
+  broadcasterId String
+  id            Int         @default(autoincrement()) @id
+  subscriberId  Int         @unique
+  userId        String?
+  subscriber    Subscribers @relation(fields: [subscriberId], references: [id])
+}
+
+model StreamChangedSubscription {
+  id           Int         @default(autoincrement()) @id
+  subscriberId Int         @unique
+  userId       String
+  subscriber   Subscribers @relation(fields: [subscriberId], references: [id])
+}
+
+model UserChangedSubscription {
+  id           Int         @default(autoincrement()) @id
+  subscriberId Int         @unique
+  userId       String
+  subscriber   Subscribers @relation(fields: [subscriberId], references: [id])
+}
+
+model UserFollowsSubscription {
+  fromId       String?
+  id           Int         @default(autoincrement()) @id
+  subscriberId Int         @unique
+  toId         String?
+  subscriber   Subscribers @relation(fields: [subscriberId], references: [id])
+}
+
+model Subscribers {
+  callbackUrl                             String                                    @unique
+  createdByClientId                       String
+  expires                                 DateTime
+  id                                      Int                                       @default(autoincrement()) @id
+  multiplicity                            Int                                       @default(1)
+  secret                                  String
+  type                                    Int
+  validated                               Boolean                                   @default(false)
+  queuedForRemoval                        Boolean                                   @default(false)
+  ChannelBanChangedEventSubscription      ChannelBanChangedEventSubscription?
+  ExtensionTransactionCreatedSubscription ExtensionTransactionCreatedSubscription?
+  ModeratorChangedSubscription            ModeratorChangedSubscription?
+  StreamChangedSubscription               StreamChangedSubscription?
+  UserChangedSubscription                 UserChangedSubscription?
+  UserFollowsSubscription                 UserFollowsSubscription?
+  SubscriberSubscription                  SubscriberSubscription?
+}
