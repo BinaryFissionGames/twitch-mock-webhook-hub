@@ -1,11 +1,20 @@
 //Clear db of all subscribers
 import {TopicToWebhookType, WebhookEvent, WebhookType} from "./events";
-import {options, prisma, removeCallbacksTimeout, removeExpiredTimeout, server, verifyCallbacksTimeout} from "./setup";
+import {
+    knex,
+    options,
+    prisma,
+    removeCallbacksTimeout,
+    removeExpiredTimeout,
+    server,
+    verifyCallbacksTimeout
+} from "./setup";
 import {HubSubscriptionRequest, validateHubSubscriptionRequest} from "./http-types";
 import * as assert from 'assert';
 import * as createHttpError from "http-errors";
 import {notifySubscriber} from "./internal_functions";
 import {Subscribers} from '../dist/generated/prisma/client';
+import * as Knex from "knex";
 
 async function addSubscription(request: HubSubscriptionRequest, clientId?: string): Promise<void> {
     let topicUrl = new URL(request["hub.topic"]);
@@ -174,13 +183,16 @@ async function removeSubscription(callbackUrl: string): Promise<boolean> {
 
 async function clearDb() {
     logVerbose('Clearing DB');
-    await prisma.raw`DELETE FROM Subscribers`; // Because prisma2 doesn't properly support cascading deletes.
-    await prisma.subscriberSubscription.deleteMany({});
-    await prisma.channelBanChangedEventSubscription.deleteMany({});
-    await prisma.moderatorChangedSubscription.deleteMany({});
-    await prisma.extensionTransactionCreatedSubscription.deleteMany({});
-    await prisma.streamChangedSubscription.deleteMany({});
-    await prisma.userFollowsSubscription.deleteMany({});
+    await knex.transaction(async (trx: Knex.Transaction) => {
+        await trx('Subscribers').del();
+        await trx('SubscriberSubscription').del();
+        await trx('ChannelBanChangedEventSubscription').del();
+        await trx('ModeratorChangedSubscription').del();
+        await trx('ExtensionTransactionCreatedSubscription').del();
+        await trx('StreamChangedSubscription').del();
+        await trx('UserFollowsSubscription').del();
+        return trx.commit();
+    });
 }
 
 async function closeMockServer(killPrisma?: boolean): Promise<void> {

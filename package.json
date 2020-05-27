@@ -27,6 +27,8 @@
     "@types/http-errors": "^1.6.3",
     "express": "^4.17.1",
     "got": "^11.1.4",
-    "http-errors": "^1.7.3"
+    "http-errors": "^1.7.3",
+    "knex": "^0.21.1",
+    "sqlite3": "^4.2.0"
   }
 }

@@ -7,10 +7,20 @@ import {isValidHubSubscriptionRequest} from "./http-types";
 import {addSubscription, logVerbose, removeSubscription} from "./programmatic_api";
 import {removeExpired, tryRemoveQueued, verifyPendingCallbacks} from "./internal_functions";
 import * as createHttpError from "http-errors";
+import * as path from 'path';
 
 const prisma: PrismaClient = new PrismaClient({
     datasources: {
         twitch_mock_webhook_hub_db: "file:./twitch_mock_webhook_hub_db.db"
+    }
+});
+
+//knex to do actual heavy lifting for things like transaction support.
+//I really want to write a rant here about prisma, but I will restrain myself
+const knex = require('knex')({
+    client: 'sqlite3',
+    connection: {
+        filename: path.join(__dirname, '../prisma/twitch_mock_webhook_hub_db.db')
     }
 });
 
@@ -122,6 +132,7 @@ async function setUpMockWebhookServer(config: MockServerOptions): Promise<void> 
 
 export {
     prisma,
+    knex,
     server,
     verifyCallbacksTimeout,
     removeExpiredTimeout,
