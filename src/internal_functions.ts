@@ -120,13 +120,15 @@ async function tryRemoveQueued() {
 }
 
 async function removeExpired() {
-    await prisma.subscribers.deleteMany({
+    logVerbose('Deleting expired subs...');
+    let amount = await prisma.subscribers.deleteMany({
         where: {
             expires: {
                 lte: new Date()
             }
         }
     });
+    logVerbose(`Removed ${amount.count} expired records`);
 }
 
 async function reconstructTopicUrl(sub: Subscribers): Promise<URL> {
