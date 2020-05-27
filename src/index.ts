@@ -2,13 +2,14 @@ import {clearDb, closeMockServer} from "./programmatic_api";
 import {setUpMockWebhookServer} from "./setup";
 
 export * from './programmatic_api'
-export * from './setup'
-export * from './http-types'
+export {
+    setUpMockWebhookServer
+} from './setup'
 export * from './events'
 
 if (require.main === module) {
     clearDb().then(() => {
-        let port = process.env.WEBHOOK_HUB_PORT  ? parseInt(process.env.WEBHOOK_HUB_PORT) : 3080;
+        let port = process.env.WEBHOOK_HUB_PORT ? parseInt(process.env.WEBHOOK_HUB_PORT) : 3080;
         return setUpMockWebhookServer({
             hub_url: `http://localhost:${port}/hub`,
             port
