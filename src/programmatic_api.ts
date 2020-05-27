@@ -28,7 +28,7 @@ async function addSubscription(request: HubSubscriptionRequest, clientId?: strin
                 data: {
                     callbackUrl: request["hub.callback"],
                     createdByClientId: clientId,
-                    expires: new Date(Date.now() + request["hub.lease_seconds"] * 1000),
+                    expires: Date.now() + request["hub.lease_seconds"] * 1000,
                     secret: request["hub.secret"],
                     type: type,
                     UserFollowsSubscription: {
@@ -47,7 +47,7 @@ async function addSubscription(request: HubSubscriptionRequest, clientId?: strin
                 data: {
                     callbackUrl: request["hub.callback"],
                     createdByClientId: clientId,
-                    expires: new Date(Date.now() + request["hub.lease_seconds"] * 1000),
+                    expires: Date.now() + request["hub.lease_seconds"] * 1000,
                     secret: request["hub.secret"],
                     type: type,
                     SubscriberSubscription: {
@@ -68,7 +68,7 @@ async function addSubscription(request: HubSubscriptionRequest, clientId?: strin
                 data: {
                     callbackUrl: request["hub.callback"],
                     createdByClientId: clientId,
-                    expires: new Date(Date.now() + request["hub.lease_seconds"] * 1000),
+                    expires: Date.now() + request["hub.lease_seconds"] * 1000,
                     secret: request["hub.secret"],
                     type: type,
                     ChannelBanChangedEventSubscription: {
@@ -87,7 +87,7 @@ async function addSubscription(request: HubSubscriptionRequest, clientId?: strin
                 data: {
                     callbackUrl: request["hub.callback"],
                     createdByClientId: clientId,
-                    expires: new Date(Date.now() + request["hub.lease_seconds"] * 1000),
+                    expires: Date.now() + request["hub.lease_seconds"] * 1000,
                     secret: request["hub.secret"],
                     type: type,
                     ModeratorChangedSubscription: {
@@ -105,7 +105,7 @@ async function addSubscription(request: HubSubscriptionRequest, clientId?: strin
                 data: {
                     callbackUrl: request["hub.callback"],
                     createdByClientId: clientId,
-                    expires: new Date(Date.now() + request["hub.lease_seconds"] * 1000),
+                    expires: Date.now() + request["hub.lease_seconds"] * 1000,
                     secret: request["hub.secret"],
                     type: type,
                     UserChangedSubscription: {
@@ -122,7 +122,7 @@ async function addSubscription(request: HubSubscriptionRequest, clientId?: strin
                 data: {
                     callbackUrl: request["hub.callback"],
                     createdByClientId: clientId,
-                    expires: new Date(Date.now() + request["hub.lease_seconds"] * 1000),
+                    expires: Date.now() + request["hub.lease_seconds"] * 1000,
                     secret: request["hub.secret"],
                     type: type,
                     StreamChangedSubscription: {
@@ -140,7 +140,7 @@ async function addSubscription(request: HubSubscriptionRequest, clientId?: strin
                 data: {
                     callbackUrl: request["hub.callback"],
                     createdByClientId: clientId,
-                    expires: new Date(Date.now() + request["hub.lease_seconds"] * 1000),
+                    expires: Date.now() + request["hub.lease_seconds"] * 1000,
                     secret: request["hub.secret"],
                     type: type,
                     ExtensionTransactionCreatedSubscription: {

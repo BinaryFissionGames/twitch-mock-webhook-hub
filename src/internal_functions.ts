@@ -32,7 +32,7 @@ async function verifyPendingCallbacks() {
         urlCallbackParamsStripped.searchParams.set('hub.mode', 'subscribe');
         urlCallbackParamsStripped.searchParams.set('hub.topic', (await reconstructTopicUrl(sub)).href);
         urlCallbackParamsStripped.searchParams.set('hub.challenge', challenge);
-        urlCallbackParamsStripped.searchParams.set('hub.lease_seconds', ((sub.expires.getTime() - Date.now()) / 1000).toString());
+        urlCallbackParamsStripped.searchParams.set('hub.lease_seconds', ((sub.expires - Date.now()) / 1000).toString());
 
         requestPromises.push(
             got.get(urlCallbackParamsStripped.href)
@@ -124,7 +124,7 @@ async function removeExpired() {
     let amount = await prisma.subscribers.deleteMany({
         where: {
             expires: {
-                lte: new Date()
+                lte: Date.now()
             }
         }
     });
