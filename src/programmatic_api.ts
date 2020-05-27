@@ -393,7 +393,7 @@ async function emitEvent<T extends WebhookType>(event: WebhookEvent<T>) {
 
 function logVerbose(message?: any, ...args: any[]): void {
     if (options && options.verbose) {
-        console.log(message, args);
+        console.log(message, ...args);
     }
 }
 
