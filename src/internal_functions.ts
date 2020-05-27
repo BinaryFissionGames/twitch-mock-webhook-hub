@@ -226,7 +226,7 @@ async function notifySubscriber<T extends WebhookType>(subscriber: Subscribers, 
         maxRedirects: 10,
         body: body,
         headers: {
-            'X-Hub-Signature': crypto.createHmac('sha256', subscriber.secret).update(body).digest('hex')
+            'X-Hub-Signature': 'sha256='+crypto.createHmac('sha256', subscriber.secret).update(body).digest('hex')
         },
         timeout: 10000,
         retry: {
