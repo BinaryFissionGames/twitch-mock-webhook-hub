@@ -32,6 +32,7 @@ function isValidHubSubscriptionRequest(requestBody: any): requestBody is HubSubs
     assert.ok(!!requestBody['hub.mode'], makeError(400, 'No hub.mode on request object'));
     assert.ok(!!requestBody['hub.topic'], makeError(400, 'No hub.topic on request object'));
     assert.ok(!!requestBody['hub.lease_seconds'], makeError(400, 'No hub.lease_seconds on request object'));
+    assert.ok(typeof requestBody['hub.lease_seconds'] === 'number', makeError(400, 'hub.lease_seconds must be a number'));
     assert.ok(!!requestBody['hub.secret'], makeError(400, 'No hub.secret on request object'));
 
     return true;
