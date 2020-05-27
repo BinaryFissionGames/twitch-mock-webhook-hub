@@ -17,7 +17,7 @@ import {logVerbose} from "./programmatic_api";
 async function verifyPendingCallbacks() {
     logVerbose('Verifying pending callbacks...');
     let pendingSubs = await prisma.subscribers.findMany({
-        where: {validated: false}
+        where: {validated: 0}
     });
 
     logVerbose('Unvalidated subs: ', pendingSubs);
@@ -50,7 +50,7 @@ async function verifyPendingCallbacks() {
                             id: sub.id
                         },
                         data: {
-                            validated: true
+                            validated: 1
                         }
                     });
                 }).catch((e) => {
@@ -67,7 +67,7 @@ async function verifyPendingCallbacks() {
 async function tryRemoveQueued() {
     logVerbose('Removing pending subscriptions!');
     let pendingRemoval = await prisma.subscribers.findMany({
-        where: {queuedForRemoval: true}
+        where: {queuedForRemoval: 1}
     });
 
     logVerbose('Pending for removal:', pendingRemoval);
@@ -94,7 +94,7 @@ async function tryRemoveQueued() {
                                 id: sub.id
                             },
                             data: {
-                                queuedForRemoval: false
+                                queuedForRemoval: 0
                             }
                         });
                     }

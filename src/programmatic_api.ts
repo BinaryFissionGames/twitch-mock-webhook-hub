@@ -163,7 +163,7 @@ async function removeSubscription(callbackUrl: string): Promise<boolean> {
             callbackUrl: callbackUrl
         },
         data: {
-            queuedForRemoval: true
+            queuedForRemoval: 1
         }
     });
 

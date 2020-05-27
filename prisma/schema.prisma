@@ -71,8 +71,8 @@ model Subscribers {
   multiplicity                            Int                                       @default(1)
   secret                                  String
   type                                    Int
-  validated                               Boolean                                   @default(false)
-  queuedForRemoval                        Boolean                                   @default(false)
+  validated                               Int                                       @default(0)
+  queuedForRemoval                        Int                                       @default(0)
   ChannelBanChangedEventSubscription      ChannelBanChangedEventSubscription?
   ExtensionTransactionCreatedSubscription ExtensionTransactionCreatedSubscription?
   ModeratorChangedSubscription            ModeratorChangedSubscription?
