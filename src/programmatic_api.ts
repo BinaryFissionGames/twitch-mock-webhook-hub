@@ -174,7 +174,7 @@ async function removeSubscription(callbackUrl: string): Promise<boolean> {
 
 async function clearDb() {
     logVerbose('Clearing DB');
-    await prisma.subscribers.deleteMany({});
+    await prisma.raw`DELETE FROM Subscribers`; // Because prisma2 doesn't properly support cascading deletes.
     await prisma.subscriberSubscription.deleteMany({});
     await prisma.channelBanChangedEventSubscription.deleteMany({});
     await prisma.moderatorChangedSubscription.deleteMany({});

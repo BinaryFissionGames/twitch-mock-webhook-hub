@@ -40,11 +40,7 @@ async function verifyPendingCallbacks() {
                     if (Math.floor(res.statusCode / 100) !== 2 || res.body !== challenge) {
                         //Cancel subscription
                         logVerbose(`Response code (${res.statusCode})/challenge(actual: ${res.body}, expected: ${challenge}) mismatch; Deleting sub for URL: ${sub.callbackUrl}`);
-                        return prisma.subscribers.delete({
-                            where: {
-                                id: sub.id
-                            }
-                        });
+                        return prisma.raw`DELETE FROM Subscribers WHERE id=${sub.id}`; // Because prisma doesn't support cascading deletes
                     }
 
                     logVerbose('Adding subscription for URL:', sub.callbackUrl);
@@ -103,11 +99,7 @@ async function tryRemoveQueued() {
                         });
                     }
 
-                    return prisma.subscribers.delete({
-                        where: {
-                            id: sub.id
-                        }
-                    });
+                    return prisma.raw`DELETE FROM Subscribers WHERE id=${sub.id}`; // Because prisma doesn't support cascading deletes
                 }).catch((e) => {
                 if (options && options.logErrors) {
                     console.error(e);
@@ -121,14 +113,7 @@ async function tryRemoveQueued() {
 
 async function removeExpired() {
     logVerbose('Deleting expired subs...');
-    let amount = await prisma.subscribers.deleteMany({
-        where: {
-            expires: {
-                lte: Date.now()
-            }
-        }
-    });
-    logVerbose(`Removed ${amount.count} expired records`);
+    return prisma.raw`DELETE FROM Subscribers WHERE expires<=${Date.now()}`; // Because prisma doesn't support cascading deletes
 }
 
 async function reconstructTopicUrl(sub: Subscribers): Promise<URL> {
