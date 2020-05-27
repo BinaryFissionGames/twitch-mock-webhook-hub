@@ -18,6 +18,7 @@ type MockServerOptionsCommon = {
     hub_url: string,
     logErrors?: boolean,
     verbose?: boolean
+    pollTimerMs?: number
 }
 
 type MockServerOptionsExpressApp = {
@@ -43,6 +44,7 @@ async function setUpMockWebhookServer(config: MockServerOptions): Promise<void> 
     const app = (config as MockServerOptionsExpressApp).expressApp ? (config as MockServerOptionsExpressApp).expressApp : express();
 
     options = config;
+    options.pollTimerMs = options.pollTimerMs || verifyCallbacksTimeoutMs;
 
     let url = new URL(config.hub_url);
 
@@ -92,24 +94,24 @@ async function setUpMockWebhookServer(config: MockServerOptions): Promise<void> 
 
     let verifyCallbacks = () => {
         verifyPendingCallbacks().then(() => {
-            verifyCallbacksTimeout = setTimeout(verifyCallbacks, verifyCallbacksTimeoutMs);
+            verifyCallbacksTimeout = setTimeout(verifyCallbacks, <number>options.pollTimerMs);
         });
     };
-    verifyCallbacksTimeout = setTimeout(verifyCallbacks, verifyCallbacksTimeoutMs);
+    verifyCallbacksTimeout = setTimeout(verifyCallbacks, <number>options.pollTimerMs);
 
     let removeCallbacks = () => {
         tryRemoveQueued().then(() => {
-            removeCallbacksTimeout = setTimeout(removeCallbacks, verifyCallbacksTimeoutMs);
+            removeCallbacksTimeout = setTimeout(removeCallbacks, <number>options.pollTimerMs);
         });
     };
-    removeCallbacksTimeout = setTimeout(removeCallbacks, verifyCallbacksTimeoutMs);
+    removeCallbacksTimeout = setTimeout(removeCallbacks, <number>options.pollTimerMs);
 
     let removeExpiredCallbacks = () => {
         removeExpired().then(() => {
-            removeExpiredTimeout = setTimeout(removeExpiredCallbacks, verifyCallbacksTimeoutMs);
+            removeExpiredTimeout = setTimeout(removeExpiredCallbacks, <number>options.pollTimerMs);
         })
     };
-    removeExpiredTimeout = setTimeout(removeExpiredCallbacks, verifyCallbacksTimeoutMs);
+    removeExpiredTimeout = setTimeout(removeExpiredCallbacks, <number>options.pollTimerMs);
 
     if ((config as MockServerOptionsPort).port) {
         return new Promise((resolve, reject) => {
