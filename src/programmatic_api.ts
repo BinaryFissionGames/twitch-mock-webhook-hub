@@ -214,6 +214,8 @@ async function closeMockServer(killPrisma?: boolean): Promise<void> {
         await prisma.disconnect();
     }
 
+    await knex.destroy();
+
     return new Promise((resolve, reject) => {
         if (server) {
             server.close((err) => {
