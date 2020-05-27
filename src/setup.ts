@@ -21,7 +21,8 @@ const knex = require('knex')({
     client: 'sqlite3',
     connection: {
         filename: path.join(__dirname, '../prisma/twitch_mock_webhook_hub_db.db')
-    }
+    },
+    useNullAsDefault: true
 });
 
 type MockServerOptionsCommon = {
