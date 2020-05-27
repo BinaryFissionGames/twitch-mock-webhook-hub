@@ -8,15 +8,19 @@ import {
     ChannelBanChangedEventSubscription,
     SubscriberSubscription
 } from '../dist/generated/prisma/client'
-import {prisma} from "./setup";
+import {options, prisma} from "./setup";
 import got from "got";
 import * as crypto from 'crypto';
 import {WebhookEvent, WebhookType, WebhookTypeTopic} from "./events";
+import {logVerbose} from "./programmatic_api";
 
 async function verifyPendingCallbacks() {
+    logVerbose('Verifying pending callbacks...');
     let pendingSubs = await prisma.subscribers.findMany({
         where: {validated: false}
     });
+
+    logVerbose('Unvalidated subs: ', pendingSubs);
 
     let requestPromises = [];
     for (let sub of pendingSubs) {
@@ -32,15 +36,18 @@ async function verifyPendingCallbacks() {
 
         requestPromises.push(
             got.get(urlCallbackParamsStripped.href)
-                .then(req => {
-                    if (Math.floor(req.statusCode / 100) !== 2 || req.body != challenge) {
+                .then(res => {
+                    if (Math.floor(res.statusCode / 100) !== 2 || res.body !== challenge) {
                         //Cancel subscription
+                        logVerbose(`Response code (${res.statusCode})/challenge(actual: ${res.body}, expected: ${challenge}) mismatch; Deleting sub for URL: ${sub.callbackUrl}`);
                         return prisma.subscribers.delete({
                             where: {
                                 id: sub.id
                             }
                         });
                     }
+
+                    logVerbose('Adding subscription for URL:', sub.callbackUrl);
 
                     return prisma.subscribers.update({
                         where: {
@@ -51,7 +58,9 @@ async function verifyPendingCallbacks() {
                         }
                     });
                 }).catch((e) => {
-                console.error(e);
+                if (options && options.logErrors) {
+                    console.error(e);
+                }
             })
         );
     }
@@ -60,9 +69,12 @@ async function verifyPendingCallbacks() {
 }
 
 async function tryRemoveQueued() {
+    logVerbose('Removing pending subscriptions!');
     let pendingRemoval = await prisma.subscribers.findMany({
         where: {queuedForRemoval: true}
     });
+
+    logVerbose('Pending for removal:', pendingRemoval);
 
     let requestPromises = [];
     for (let sub of pendingRemoval) {
@@ -74,12 +86,12 @@ async function tryRemoveQueued() {
         urlCallbackParamsStripped.searchParams.set('hub.mode', 'unsubscribe');
         urlCallbackParamsStripped.searchParams.set('hub.topic', (await reconstructTopicUrl(sub)).href);
         urlCallbackParamsStripped.searchParams.set('hub.challenge', challenge);
-        urlCallbackParamsStripped.searchParams.set('hub.lease_seconds', ((sub.expires.getTime() - Date.now()) / 1000).toString());
 
         requestPromises.push(
             got.get(urlCallbackParamsStripped.href)
-                .then(req => {
-                    if (Math.floor(req.statusCode / 100) !== 2 || req.body != challenge) {
+                .then(res => {
+                    if (Math.floor(res.statusCode / 100) !== 2 || res.body != challenge) {
+                        logVerbose(`Response code (${res.statusCode})/challenge(actual: ${res.body}, expected: ${challenge}) mismatch; Ignoring delete request for URL: ${sub.callbackUrl}`);
                         // Endpoint DOES NOT want this subscription to end. We won't stop it, in that case.
                         return prisma.subscribers.update({
                             where: {
@@ -97,7 +109,9 @@ async function tryRemoveQueued() {
                         }
                     });
                 }).catch((e) => {
-                console.error(e);
+                if (options && options.logErrors) {
+                    console.error(e);
+                }
             })
         );
     }
@@ -217,6 +231,8 @@ async function notifySubscriber<T extends WebhookType>(subscriber: Subscribers, 
             event.data
         ]
     });
+
+    logVerbose(`Notifying subscriber ${subscriber.callbackUrl} w/ payload ${body}`);
 
     await got.post(subscriber.callbackUrl, {
         followRedirect: true,

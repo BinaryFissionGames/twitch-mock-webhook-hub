@@ -1,6 +1,6 @@
 //Clear db of all subscribers
 import {TopicToWebhookType, WebhookEvent, WebhookType} from "./events";
-import {prisma, removeCallbacksTimeout, removeExpiredTimeout, server, verifyCallbacksTimeout} from "./setup";
+import {options, prisma, removeCallbacksTimeout, removeExpiredTimeout, server, verifyCallbacksTimeout} from "./setup";
 import {HubSubscriptionRequest, validateHubSubscriptionRequest} from "./http-types";
 import * as assert from 'assert';
 import * as createHttpError from "http-errors";
@@ -167,10 +167,13 @@ async function removeSubscription(callbackUrl: string): Promise<boolean> {
         }
     });
 
+    logVerbose('Queued sub for removal:', subs);
+
     return subs !== undefined;
 }
 
 async function clearDb() {
+    logVerbose('Clearing DB');
     await prisma.subscribers.deleteMany({});
     await prisma.subscriberSubscription.deleteMany({});
     await prisma.channelBanChangedEventSubscription.deleteMany({});
@@ -181,6 +184,8 @@ async function clearDb() {
 }
 
 async function closeMockServer(killPrisma?: boolean): Promise<void> {
+    logVerbose('Closing mock server');
+
     if (verifyCallbacksTimeout) {
         clearTimeout(verifyCallbacksTimeout);
     }
@@ -375,6 +380,8 @@ async function emitEvent<T extends WebhookType>(event: WebhookEvent<T>) {
             throw new Error('Invalid type!');
     }
 
+    logVerbose('Emitting message to subscribers: ', subs);
+
     let promises = [];
     for (let sub of subs) {
         promises.push(notifySubscriber(sub.subscriber, event).catch((e) => {
@@ -384,10 +391,17 @@ async function emitEvent<T extends WebhookType>(event: WebhookEvent<T>) {
     await Promise.all(promises);
 }
 
+function logVerbose(message?: any, ...args: any[]): void {
+    if (options && options.verbose) {
+        console.log(message, args);
+    }
+}
+
 export {
     addSubscription,
     removeSubscription,
     closeMockServer,
     clearDb,
     emitEvent,
+    logVerbose
 }

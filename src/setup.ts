@@ -1,11 +1,12 @@
-import {Express} from "express";
+import {Express, NextFunction} from "express";
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as http from 'http'
 import {PrismaClient} from '../dist/generated/prisma/client'
 import {isValidHubSubscriptionRequest} from "./http-types";
-import {addSubscription, removeSubscription} from "./programmatic_api";
+import {addSubscription, logVerbose, removeSubscription} from "./programmatic_api";
 import {removeExpired, tryRemoveQueued, verifyPendingCallbacks} from "./internal_functions";
+import * as createHttpError from "http-errors";
 
 const prisma: PrismaClient = new PrismaClient({
     datasources: {
@@ -15,7 +16,8 @@ const prisma: PrismaClient = new PrismaClient({
 
 type MockServerOptionsCommon = {
     hub_url: string,
-    logErrors?: boolean
+    logErrors?: boolean,
+    verbose?: boolean
 }
 
 type MockServerOptionsExpressApp = {
@@ -35,16 +37,22 @@ let verifyCallbacksTimeout: NodeJS.Timeout;
 let removeCallbacksTimeout: NodeJS.Timeout;
 let removeExpiredTimeout: NodeJS.Timeout;
 
+let options: MockServerOptions;
+
 async function setUpMockWebhookServer(config: MockServerOptions): Promise<void> {
     const app = (config as MockServerOptionsExpressApp).expressApp ? (config as MockServerOptionsExpressApp).expressApp : express();
+
+    options = config;
 
     let url = new URL(config.hub_url);
 
     app.use(url.pathname, bodyParser.json());
     app.post(url.pathname, async (req, res, next) => {
         try {
+            logVerbose('Subscriber made request to hub, body: ', req.body);
             if (isValidHubSubscriptionRequest(req.body)) {
                 if (req.body["hub.mode"] === 'subscribe') {
+                    logVerbose('Adding subscriber for endpoint', req.body["hub.callback"]);
                     await addSubscription(req.body, req.header('Client-ID'));
                     res.status(202);
                     res.end();
@@ -57,6 +65,29 @@ async function setUpMockWebhookServer(config: MockServerOptions): Promise<void> 
         } catch (e) {
             next(e);
         }
+    });
+
+    app.use(function (error: Error, req: express.Request, res: express.Response, next: NextFunction) {
+        if (res.headersSent) {
+            return next(error);
+        }
+
+        if (config.logErrors) {
+            console.error(error);
+        }
+
+        if ((error as createHttpError.HttpError).statusCode) {
+            res.status((error as createHttpError.HttpError).statusCode);
+        } else {
+            res.status(500);
+        }
+
+        res.json({
+            status: 'error',
+            message: error.message
+        });
+
+        res.end();
     });
 
     let verifyCallbacks = () => {
@@ -93,5 +124,6 @@ export {
     verifyCallbacksTimeout,
     removeExpiredTimeout,
     removeCallbacksTimeout,
-    setUpMockWebhookServer
+    setUpMockWebhookServer,
+    options
 }
