@@ -12,7 +12,9 @@ if (require.main === module) {
         let port = process.env.WEBHOOK_HUB_PORT ? parseInt(process.env.WEBHOOK_HUB_PORT) : 3080;
         return setUpMockWebhookServer({
             hub_url: `http://localhost:${port}/hub`,
-            port
+            port,
+            logErrors: true,
+            verbose: true
         });
     }).then(() => {
         process.on('SIGINT', async () => {
