@@ -117,7 +117,7 @@ type ChannelBanChangeEvent = {
     event_type: ModeratorEventType,
     event_timestamp: Date,
     version: string,
-    event_data: ModeratorEventData // TODO: Check if this is only ban & unban - not mod add and remove
+    event_data: ModeratorEventData
 };
 
 //SUBSCRIPTION EVENT DATA TY{ES
