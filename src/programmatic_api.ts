@@ -6,7 +6,7 @@ import {
     prisma,
     removeCallbacksTimeout,
     removeExpiredTimeout,
-    server,
+    server, setStopped,
     verifyCallbacksTimeout
 } from "./setup";
 import {HubSubscriptionRequest, validateHubSubscriptionRequest} from "./http-types";
@@ -199,6 +199,8 @@ async function clearDb() {
 
 async function closeMockServer(killPrisma?: boolean): Promise<void> {
     logVerbose('Closing mock server');
+
+    setStopped(true);
 
     if (verifyCallbacksTimeout) {
         clearTimeout(verifyCallbacksTimeout);

@@ -73,9 +73,12 @@ let removeExpiredTimeout: NodeJS.Timeout;
 
 let options: MockServerOptions;
 
+let isStopped = false;
+
 async function setUpMockWebhookServer(config: MockServerOptions): Promise<void> {
     const app = (config as MockServerOptionsExpressApp).expressApp ? (config as MockServerOptionsExpressApp).expressApp : express();
 
+    isStopped = false;
     options = config;
     options.pollTimerMs = options.pollTimerMs || verifyCallbacksTimeoutMs;
 
@@ -127,21 +130,27 @@ async function setUpMockWebhookServer(config: MockServerOptions): Promise<void> 
 
     let verifyCallbacks = () => {
         verifyPendingCallbacks().then(() => {
-            verifyCallbacksTimeout = setTimeout(verifyCallbacks, <number>options.pollTimerMs);
+            if(!isStopped) {
+                verifyCallbacksTimeout = setTimeout(verifyCallbacks, <number>options.pollTimerMs);
+            }
         });
     };
     verifyCallbacksTimeout = setTimeout(verifyCallbacks, <number>options.pollTimerMs);
 
     let removeCallbacks = () => {
         tryRemoveQueued().then(() => {
-            removeCallbacksTimeout = setTimeout(removeCallbacks, <number>options.pollTimerMs);
+            if(!isStopped) {
+                removeCallbacksTimeout = setTimeout(removeCallbacks, <number>options.pollTimerMs);
+            }
         });
     };
     removeCallbacksTimeout = setTimeout(removeCallbacks, <number>options.pollTimerMs);
 
     let removeExpiredCallbacks = () => {
         removeExpired().then(() => {
-            removeExpiredTimeout = setTimeout(removeExpiredCallbacks, <number>options.pollTimerMs);
+            if(!isStopped) {
+                removeExpiredTimeout = setTimeout(removeExpiredCallbacks, <number>options.pollTimerMs);
+            }
         })
     };
     removeExpiredTimeout = setTimeout(removeExpiredCallbacks, <number>options.pollTimerMs);
@@ -153,6 +162,10 @@ async function setUpMockWebhookServer(config: MockServerOptions): Promise<void> 
     }
 }
 
+function setStopped(stopped: boolean){
+    isStopped = stopped;
+}
+
 export {
     prisma,
     knex,
@@ -161,5 +174,6 @@ export {
     removeExpiredTimeout,
     removeCallbacksTimeout,
     setUpMockWebhookServer,
-    options
+    options,
+    setStopped
 }
