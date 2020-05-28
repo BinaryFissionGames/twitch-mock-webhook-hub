@@ -18,8 +18,7 @@ async function runInImmediateTrxWhileBlocked(cb: (trx: Knex.Transaction) => Prom
                     }
                 });
             }, {
-                immediate: true,
-                doNotRejectOnRollback: false
+                immediate: true
             });
         } catch (e) {
             if(options && options.logErrors) {
