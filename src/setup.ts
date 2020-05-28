@@ -8,6 +8,28 @@ import {addSubscription, logVerbose, removeSubscription} from "./programmatic_ap
 import {removeExpired, tryRemoveQueued, verifyPendingCallbacks} from "./internal_functions";
 import * as createHttpError from "http-errors";
 import * as path from 'path';
+// @ts-ignore
+import Transaction = require('knex/lib/transaction');
+// @ts-ignore
+import Client = require('knex/lib/client');
+
+//OK,so this is probably a bad Idea. But I need the option to make "immediate" transactions, so I've changed the transaction prototype.
+// @ts-ignore
+Transaction.prototype.begin = function (conn) {
+    if (this.config && this.config.immediate) {
+        return this.query(conn, 'BEGIN IMMEDIATE;')
+    }
+    return this.query(conn, 'BEGIN;');
+};
+
+//Do this so we can access full config object on transaction.
+// @ts-ignore
+Client.prototype.transaction = function (container, config, outerTx) {
+    let trans = new Transaction(this, container, config, outerTx);
+    trans.config = config; // I know they make copies in the Knex code, but I don't think that's necessary, TBH
+    return trans;
+};
+
 
 const prisma: PrismaClient = new PrismaClient({
     datasources: {

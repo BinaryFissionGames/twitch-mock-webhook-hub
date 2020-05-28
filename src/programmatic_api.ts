@@ -15,6 +15,7 @@ import * as createHttpError from "http-errors";
 import {notifySubscriber} from "./internal_functions";
 import {Subscribers} from '../dist/generated/prisma/client';
 import * as Knex from "knex";
+import {runInImmediateTrxWhileBlocked} from "./util";
 
 async function addSubscription(request: HubSubscriptionRequest, clientId?: string): Promise<void> {
     let topicUrl = new URL(request["hub.topic"]);
@@ -183,7 +184,7 @@ async function removeSubscription(callbackUrl: string): Promise<boolean> {
 
 async function clearDb() {
     logVerbose('Clearing DB');
-    await knex.transaction(async (trx: Knex.Transaction) => {
+    await runInImmediateTrxWhileBlocked(async (trx: Knex.Transaction) => {
         await trx('Subscribers').del();
         await trx('SubscriberSubscription').del();
         await trx('ChannelBanChangedEventSubscription').del();
@@ -193,6 +194,7 @@ async function clearDb() {
         await trx('UserFollowsSubscription').del();
         return trx.commit();
     });
+    logVerbose('DB cleared');
 }
 
 async function closeMockServer(killPrisma?: boolean): Promise<void> {

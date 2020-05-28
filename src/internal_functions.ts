@@ -14,10 +14,11 @@ import * as crypto from 'crypto';
 import {WebhookEvent, WebhookType, WebhookTypeTopic} from "./events";
 import {logVerbose} from "./programmatic_api";
 import * as Knex from "knex";
+import {runInImmediateTrxWhileBlocked} from "./util";
 
 async function verifyPendingCallbacks() {
     logVerbose('Verifying pending callbacks...');
-    await knex.transaction(async (trx: Knex.Transaction) => {
+    await runInImmediateTrxWhileBlocked(async (trx: Knex.Transaction) => {
         let pendingSubs = await trx<Subscribers>('Subscribers').select().where('validated', 0);
 
         let requestPromises = [];
@@ -56,11 +57,12 @@ async function verifyPendingCallbacks() {
         await Promise.all(requestPromises);
         return trx.commit();
     });
+    logVerbose('Verified pending callbacks.');
 }
 
 async function tryRemoveQueued() {
     logVerbose('Removing pending subscriptions!');
-    await knex.transaction(async (trx: Knex.Transaction) => {
+    await runInImmediateTrxWhileBlocked(async (trx: Knex.Transaction) => {
         let pendingRemoval = await trx<Subscribers>('Subscribers').select().where('queuedForRemoval', 1);
         logVerbose('Pending for removal:', pendingRemoval);
 
@@ -96,7 +98,7 @@ async function tryRemoveQueued() {
         await Promise.all(requestPromises);
         return trx.commit();
     });
-
+    logVerbose('Removed subs queued for removal.');
 }
 
 async function removeExpired() {
