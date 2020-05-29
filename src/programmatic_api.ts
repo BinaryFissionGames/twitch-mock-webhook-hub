@@ -168,18 +168,15 @@ async function addSubscription(request: HubSubscriptionRequest, clientId?: strin
 
 //Returns true if a existing subscription was queued for removal, false if there was no such subscription.
 async function removeSubscription(callbackUrl: string): Promise<boolean> {
-    let subs = await prisma.subscribers.update({
-        where: {
-            callbackUrl: callbackUrl
-        },
-        data: {
-            queuedForRemoval: 1
-        }
+    let subs : Subscribers[] = [];
+    await runInImmediateTrxWhileBlocked(async (trx: Knex.Transaction) => {
+        subs = await trx<Subscribers>('Subscribers').where('callbackUrl', callbackUrl);
+        await trx('Subscribers').update('queuedForRemoval', 1).where('callbackUrl', callbackUrl);
     });
 
     logVerbose('Queued sub for removal:', subs);
 
-    return subs !== undefined;
+    return subs !== undefined && subs.length > 1;
 }
 
 async function clearDb() {
